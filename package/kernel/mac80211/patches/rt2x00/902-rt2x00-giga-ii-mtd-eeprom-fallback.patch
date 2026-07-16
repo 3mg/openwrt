@@ -1,0 +1,31 @@
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00eeprom.c
+@@ -31,8 +31,20 @@ static int rt2800lib_read_eeprom_mtd(str
+ 	int ret;
+ 
++	if (!np) {
++		/* RT6855A enumerates PCI through legacy platform code and thus
++		 * cannot associate the RT5392 with a PCI child OF node. The
++		 * partition name is fixed by the Keenetic Giga II flash layout.
++		 */
++		if (!of_machine_is_compatible("zyxel,keenetic-giga-ii"))
++			return -ENOENT;
++		size = 0;
++		part = "RF-EEPROM";
++		goto read_mtd;
++	}
++
+ 	list = of_get_property(np, "ralink,mtd-eeprom", &size);
+ 	if (!list)
+ 		return -ENOENT;
+ 
+ 	phandle = be32_to_cpup(list++);
+ 	if (phandle)
+@@ -48,6 +60,7 @@ static int rt2800lib_read_eeprom_mtd(str
+ 	if (!part)
+ 		part = mtd_np->name;
+ 
++read_mtd:
+ 	mtd = get_mtd_device_nm(part);
+ 	if (IS_ERR(mtd)) {
+ 		dev_err(rt2x00dev->dev, "failed to get mtd device \"%s\"\n", part);

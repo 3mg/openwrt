@@ -1,0 +1,18 @@
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -11844,6 +11844,15 @@ static int rt2800_probe_hw_mode(struct r
+ 	tx_chains = rt2x00dev->default_ant.tx_chain_num;
+ 	rx_chains = rt2x00dev->default_ant.rx_chain_num;
+ 
++	/*
++	 * On the Keenetic Giga II, two-stream rates are unreliable through
++	 * the rt2x00 path. Keep both receive chains while advertising one
++	 * transmit stream, which gives stable MCS0-7 operation.
++	 */
++	if (rt2x00_rf(rt2x00dev, RF5392) &&
++	    of_machine_is_compatible("zyxel,keenetic-giga-ii"))
++		tx_chains = 1;
++
+ 	if (tx_chains >= 2)
+ 		spec->ht.cap |= IEEE80211_HT_CAP_TX_STBC;
+ 

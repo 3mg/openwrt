@@ -1,0 +1,33 @@
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1610,6 +1610,30 @@ static void rt2800_brightness_set(struct
+ 				   EEPROM_FREQ_LED_MODE);
+ 	u32 reg;
+ 
++	/*
++	 * ZyXEL's RT5392 board wiring uses GPIO1 together with LED_CFG,
++	 * while the generic PCI path sends MCU_LED commands. The vendor
++	 * driver programs these registers directly. Keep the other two
++	 * logical rt2x00 LEDs from fighting this one physical pin.
++	 */
++	if (rt2x00_rt(led->rt2x00dev, RT5392) &&
++	    of_machine_is_compatible("zyxel,keenetic-giga-ii")) {
++		if (led->type != LED_TYPE_RADIO)
++			return;
++
++		/* Exact register state captured from the working vendor driver. */
++		reg = rt2800_register_read(led->rt2x00dev, GPIO_CTRL);
++		reg &= ~0xa2;
++		rt2800_register_write(led->rt2x00dev, GPIO_CTRL, reg);
++		rt2800_register_write(led->rt2x00dev, GPIO_SWITCH, 0);
++
++		reg = 0;
++		if (enabled)
++			rt2x00_set_field32(&reg, LED_CFG_LED_POLAR, 1);
++		rt2800_register_write(led->rt2x00dev, LED_CFG, reg);
++		return;
++	}
++
+ 	/* Check for SoC (SOC devices don't support MCU requests) */
+ 	if (rt2x00_is_soc(led->rt2x00dev)) {
+ 		reg = rt2800_register_read(led->rt2x00dev, LED_CFG);
