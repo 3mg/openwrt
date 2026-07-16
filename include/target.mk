@@ -228,6 +228,7 @@ ifeq ($(DUMP),1)
     CPU_CFLAGS_mips64r2 = -mips64r2 -mtune=mips64r2 -mabi=64
     CPU_CFLAGS_4kec = -mips32r2 -mtune=4kec
     CPU_CFLAGS_24kc = -mips32r2 -mtune=24kc
+    CPU_CFLAGS_34kc = -mips32r2 -mtune=34kc
     CPU_CFLAGS_74kc = -mips32r2 -mtune=74kc
     CPU_CFLAGS_octeonplus = -march=octeon+ -mabi=64
   endif
@@ -328,7 +329,9 @@ ifeq ($(DUMP),1)
       FEATURES += virtio
     endif
     ifneq ($(CONFIG_CPU_MIPS32_R2),)
-      FEATURES += mips16
+      ifneq ($(DISABLE_MIPS16),y)
+        FEATURES += mips16
+      endif
     endif
     ifneq ($(CONFIG_CPU_V6),)
       FEATURES += arm_v6
