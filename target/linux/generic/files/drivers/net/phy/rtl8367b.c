@@ -420,7 +420,7 @@ static const struct rtl8367b_initval rtl8367b_initvals[] = {
 	{0x2206, 0xC000}, {0x2206, 0xEE85}, {0x2206, 0xC100}, {0x2206, 0xFDFC},
 	{0x2206, 0x0400}, {0x2205, 0xE142}, {0x2206, 0x0701}, {0x2205, 0xE140},
 	{0x2206, 0x0405}, {0x220F, 0x0000}, {0x221F, 0x0000}, {0x133E, 0x000E},
-	{0x133F, 0x0010}, {0x13EB, 0x11BB}, {0x207F, 0x0002}, {0x2073, 0x1D22},
+	{0x133F, 0x0010}, {0x13E0, 0x0010}, {0x207F, 0x0002}, {0x2073, 0x1D22},
 	{0x207F, 0x0000}, {0x133F, 0x0030}, {0x133E, 0x000E}, {0x2200, 0x1340},
 	{0x133E, 0x000E}, {0x133F, 0x0010},
 };
@@ -437,6 +437,47 @@ static const struct rtl8367b_initval rtl8367c_initvals[] = {
 	{0x00ce, 0x48b0}, {0x00ce, 0x48b0}, {0x0398, 0xffff}, {0x0399, 0x0007},
 	{0x0300, 0x0001}, {0x03fa, 0x0007}, {0x08c8, 0x00c0}, {0x0a30, 0x020e},
 	{0x0800, 0x0000}, {0x0802, 0x0000}, {0x09da, 0x0017}, {0x1d32, 0x0002},
+};
+
+static const struct rtl8367b_initval rtl8367b_vendor_initvals_1[] = {
+	{0x1B03, 0x0876}, {0x1200, 0x7FC4}, {0x1305, 0xC000}, {0x121E, 0x03CA},
+	{0x1233, 0x0352}, {0x1234, 0x0064}, {0x1237, 0x0096}, {0x1238, 0x0078},
+	{0x1239, 0x0084}, {0x123A, 0x0030}, {0x205F, 0x0002}, {0x2059, 0x1A00},
+	{0x205F, 0x0000}, {0x207F, 0x0002}, {0x2077, 0x0000}, {0x2078, 0x0000},
+	{0x2079, 0x0000}, {0x207A, 0x0000}, {0x207B, 0x0000}, {0x207F, 0x0000},
+	{0x205F, 0x0002}, {0x2053, 0x0000}, {0x2054, 0x0000}, {0x2055, 0x0000},
+	{0x2056, 0x0000}, {0x2057, 0x0000}, {0x205F, 0x0000}, {0x133F, 0x0030},
+	{0x133E, 0x000E}, {0x221F, 0x0005}, {0x2205, 0x8B86}, {0x2206, 0x800E},
+	{0x221F, 0x0000}, {0x133F, 0x0010}, {0x12A3, 0x2200}, {0x6107, 0xE58B},
+	{0x6103, 0xA970}, {0x0018, 0x0F00}, {0x0038, 0x0F00}, {0x0058, 0x0F00},
+	{0x0078, 0x0F00}, {0x0098, 0x0F00}, {0x133F, 0x0030}, {0x133E, 0x000E},
+	{0x221F, 0x0005}, {0x2205, 0x8B6E}, {0x2206, 0x0000}, {0x220F, 0x0100},
+	{0x2205, 0xFFF6}, {0x2206, 0x0080}, {0x2205, 0x8000}, {0x2206, 0x0280},
+	{0x2206, 0x2BF7}, {0x2206, 0x00E0}, {0x2206, 0xFFF7}, {0x2206, 0xA080},
+	{0x2206, 0x02AE}, {0x2206, 0xF602}, {0x2206, 0x0153}, {0x2206, 0x0201},
+	{0x2206, 0x6602}, {0x2206, 0x8044}, {0x2206, 0x0201}, {0x2206, 0x7CE0},
+	{0x2206, 0x8B8C}, {0x2206, 0xE18B}, {0x2206, 0x8D1E}, {0x2206, 0x01E1},
+	{0x2206, 0x8B8E}, {0x2206, 0x1E01}, {0x2206, 0xA000}, {0x2206, 0xE4AE},
+	{0x2206, 0xD8EE}, {0x2206, 0x85C0}, {0x2206, 0x00EE}, {0x2206, 0x85C1},
+	{0x2206, 0x00EE}, {0x2206, 0x8AFC}, {0x2206, 0x07EE}, {0x2206, 0x8AFD},
+	{0x2206, 0x73EE}, {0x2206, 0xFFF6}, {0x2206, 0x00EE}, {0x2206, 0xFFF7},
+	{0x2206, 0xFC04}, {0x2206, 0xF8E0}, {0x2206, 0x8B8E}, {0x2206, 0xAD20},
+	{0x2206, 0x0302}, {0x2206, 0x8050}, {0x2206, 0xFC04}, {0x2206, 0xF8F9},
+	{0x2206, 0xE08B}, {0x2206, 0x85AD}, {0x2206, 0x2548}, {0x2206, 0xE08A},
+	{0x2206, 0xE4E1}, {0x2206, 0x8AE5}, {0x2206, 0x7C00}, {0x2206, 0x009E},
+	{0x2206, 0x35EE}, {0x2206, 0x8AE4}, {0x2206, 0x00EE}, {0x2206, 0x8AE5},
+	{0x2206, 0x00E0}, {0x2206, 0x8AFC}, {0x2206, 0xE18A}, {0x2206, 0xFDE2},
+	{0x2206, 0x85C0}, {0x2206, 0xE385}, {0x2206, 0xC102}, {0x2206, 0x2DAC},
+	{0x2206, 0xAD20}, {0x2206, 0x12EE}, {0x2206, 0x8AE4}, {0x2206, 0x03EE},
+	{0x2206, 0x8AE5}, {0x2206, 0xB7EE}, {0x2206, 0x85C0}, {0x2206, 0x00EE},
+	{0x2206, 0x85C1}, {0x2206, 0x00AE}, {0x2206, 0x1115}, {0x2206, 0xE685},
+	{0x2206, 0xC0E7}, {0x2206, 0x85C1}, {0x2206, 0xAE08}, {0x2206, 0xEE85},
+	{0x2206, 0xC000}, {0x2206, 0xEE85}, {0x2206, 0xC100}, {0x2206, 0xFDFC},
+	{0x2206, 0x0400}, {0x2205, 0xE142}, {0x2206, 0x0701}, {0x2205, 0xE140},
+	{0x2206, 0x0405}, {0x220F, 0x0000}, {0x221F, 0x0000}, {0x133E, 0x000E},
+	{0x133F, 0x0010}, {0x13E0, 0x0010}, {0x207F, 0x0002}, {0x2073, 0x1D22},
+	{0x207F, 0x0000}, {0x133F, 0x0030}, {0x133E, 0x000E}, {0x2200, 0x1340},
+	{0x133E, 0x000E}, {0x133F, 0x0010},
 };
 
 static int rtl8367b_write_initvals(struct rtl8366_smi *smi,
@@ -551,32 +592,88 @@ static int rtl8367b_init_regs(struct rtl8366_smi *smi)
 {
 	const struct rtl8367b_initval *initvals;
 	int count;
+	int err;
 
-	switch (smi->rtl8367b_chip) {
-	case RTL8367B_CHIP_RTL8367RB:
-	case RTL8367B_CHIP_RTL8367R_VB:
-		initvals = rtl8367b_initvals;
-		count = ARRAY_SIZE(rtl8367b_initvals);
-		break;
-	case RTL8367B_CHIP_RTL8367RB_VB:
-	case RTL8367B_CHIP_RTL8367S:
-	case RTL8367B_CHIP_RTL8367S_VB:
-		initvals = rtl8367c_initvals;
-		count = ARRAY_SIZE(rtl8367c_initvals);
-		if ((smi->rtl8367b_chip == RTL8367B_CHIP_RTL8367S_VB) && (smi->emu_vlanmc == NULL)) {
-			smi->emu_vlanmc = kzalloc(sizeof(struct rtl8366_vlan_mc) * smi->num_vlan_mc, GFP_KERNEL);
-			if (!smi->emu_vlanmc) {
-				dev_err(smi->parent, "failed to allocate vlan mc emulator\n");
-				return -ENOMEM;
-			}
-			dev_info(smi->parent, "alloc vlan mc emulator\n");
+	if (smi->vendor_exact_init) {
+		u32 chip_ver;
+		u32 rlvid;
+
+		REG_WR(smi, RTL8367B_RTL_MAGIC_ID_REG,
+		       RTL8367B_RTL_MAGIC_ID_VAL);
+		REG_RD(smi, RTL8367B_CHIP_VER_REG, &chip_ver);
+		rlvid = (chip_ver >> RTL8367B_CHIP_VER_RLVID_SHIFT) &
+			RTL8367B_CHIP_VER_RLVID_MASK;
+		if (rlvid != 1) {
+			dev_err(smi->parent,
+				"unsupported RTL8367B revision %u (expected 1)\n",
+				rlvid);
+			return -ENODEV;
 		}
-		break;
-	default:
-		return -ENODEV;
+
+		initvals = rtl8367b_vendor_initvals_1;
+		count = ARRAY_SIZE(rtl8367b_vendor_initvals_1);
+	} else {
+		switch (smi->rtl8367b_chip) {
+		case RTL8367B_CHIP_RTL8367RB:
+		case RTL8367B_CHIP_RTL8367R_VB:
+			initvals = rtl8367b_initvals;
+			count = ARRAY_SIZE(rtl8367b_initvals);
+			break;
+		case RTL8367B_CHIP_RTL8367RB_VB:
+		case RTL8367B_CHIP_RTL8367S:
+		case RTL8367B_CHIP_RTL8367S_VB:
+			initvals = rtl8367c_initvals;
+			count = ARRAY_SIZE(rtl8367c_initvals);
+			if (smi->rtl8367b_chip == RTL8367B_CHIP_RTL8367S_VB &&
+			    !smi->emu_vlanmc) {
+				smi->emu_vlanmc = kcalloc(smi->num_vlan_mc,
+						      sizeof(*smi->emu_vlanmc), GFP_KERNEL);
+				if (!smi->emu_vlanmc)
+					return -ENOMEM;
+			}
+			break;
+		default:
+			return -ENODEV;
+		}
 	}
 
-	return rtl8367b_write_initvals(smi, initvals, count);
+	err = rtl8367b_write_initvals(smi, initvals, count);
+	if (err)
+		return err;
+
+	if (smi->vendor_exact_init) {
+		u32 val;
+
+		err = rtl8366_smi_write_reg(smi, 0x1303, 0x0778);
+		if (err)
+			goto vendor_post_abort;
+		err = rtl8366_smi_write_reg(smi, 0x1304, 0x7777);
+		if (err)
+			goto vendor_post_abort;
+		err = rtl8366_smi_write_reg(smi, 0x13e2, 0x01fe);
+		if (err)
+			goto vendor_post_abort;
+		err = rtl8366_smi_read_reg(smi, 0x1307, &val);
+		if (err)
+			goto vendor_post_abort;
+		err = rtl8366_smi_write_reg(smi, 0x1307,
+					    (val & 0xfff0) | 0x000a);
+		if (err)
+			goto vendor_post_abort;
+		/*
+		 * The vendor SDK table starts with 0x1b03=0x0876, then the
+		 * board LED setup replaces it with 0x0222.  Without this final
+		 * write link traffic works but all front-panel port LEDs stay off.
+		 */
+		err = rtl8366_smi_write_reg(smi, 0x1b03, 0x0222);
+		if (err)
+			goto vendor_post_abort;
+	}
+
+	return 0;
+
+vendor_post_abort:
+	return err;
 }
 
 static int rtl8367b_reset_chip(struct rtl8366_smi *smi)
@@ -701,6 +798,22 @@ static int rtl8367b_extif_set_force(struct rtl8366_smi *smi, int id,
 	val |= pa->rxpause ? RTL8367B_DI_FORCE_RXPAUSE : 0;
 	val |= pa->link ? RTL8367B_DI_FORCE_LINK : 0;
 	val |= pa->duplex ? RTL8367B_DI_FORCE_DUPLEX : 0;
+
+	if (smi->vendor_exact_init && id == 1) {
+		u32 vendor_val = val |
+			(pa->force_mode ? RTL8367B_DI_FORCE_MODE : 0);
+
+		if (vendor_val != 0x1076) {
+			dev_err(smi->parent,
+				"invalid vendor extension mode 0x%04x\n",
+				vendor_val);
+			return -EINVAL;
+		}
+		err = rtl8366_smi_write_reg(smi, 0x1311, 0x1076);
+		if (err)
+			return err;
+		return 0;
+	}
 
 	if (smi->rtl8367b_chip >= RTL8367B_CHIP_RTL8367S_VB) { /* Family D */
 		val |= (pa->speed << RTL8367D_PORT_STATUS_SPEED1_SHIFT) & RTL8367D_PORT_STATUS_SPEED1_MASK;
@@ -1295,7 +1408,6 @@ static int rtl8367b_sw_set_max_length(struct switch_dev *dev,
 			        RTL8367B_SWC0_MAX_LENGTH_MASK, max_len);
 }
 
-
 static int rtl8367b_sw_reset_port_mibs(struct switch_dev *dev,
 				       const struct switch_attr *attr,
 				       struct switch_val *val)
@@ -1560,6 +1672,11 @@ static int  rtl8367b_probe(struct platform_device *pdev)
 	smi->num_vlan_mc = RTL8367B_NUM_VLANS;
 	smi->mib_counters = rtl8367b_mib_counters;
 	smi->num_mib_counters = ARRAY_SIZE(rtl8367b_mib_counters);
+	smi->skip_reset_init = of_property_read_bool(pdev->dev.of_node,
+						      "realtek,skip-reset-init");
+	smi->vendor_exact_init = of_property_read_bool(pdev->dev.of_node,
+						       "realtek,vendor-exact-init");
+
 
 	err = rtl8366_smi_init(smi);
 	if (err)
@@ -1599,7 +1716,7 @@ static void rtl8367b_shutdown(struct platform_device *pdev)
 {
 	struct rtl8366_smi *smi = platform_get_drvdata(pdev);
 
-	if (smi)
+	if (smi && !smi->skip_reset_init)
 		rtl8367b_reset_chip(smi);
 }
 
@@ -1625,4 +1742,3 @@ MODULE_DESCRIPTION("Realtek RTL8367B ethernet switch driver");
 MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org>");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:" RTL8367B_DRIVER_NAME);
-

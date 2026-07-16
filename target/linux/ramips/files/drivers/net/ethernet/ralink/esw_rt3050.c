@@ -89,6 +89,7 @@
 #define RT305X_ESW_PCR0_WT_NWAY_DATA_S	16
 #define RT305X_ESW_PCR0_WT_PHY_CMD	BIT(13)
 #define RT305X_ESW_PCR0_CPU_PHY_REG_S	8
+#define RT305X_ESW_PCR0_WT_DONE		BIT(31)
 
 #define RT305X_ESW_PCR1_WT_DONE		BIT(0)
 
@@ -288,8 +289,13 @@ static u32 rt305x_mii_write(struct rt305x_esw *esw, u32 phy_addr,
 	int ret = 0;
 
 	while (1) {
+#ifdef CONFIG_SOC_RT6855
+		if (!(esw_r32(esw, RT305X_ESW_REG_PCR0) &
+		      RT305X_ESW_PCR0_WT_DONE))
+#else
 		if (!(esw_r32(esw, RT305X_ESW_REG_PCR1) &
 		      RT305X_ESW_PCR1_WT_DONE))
+#endif
 			break;
 		if (time_after(jiffies, t_start + RT305X_ESW_PHY_TIMEOUT)) {
 			ret = 1;
@@ -298,15 +304,27 @@ static u32 rt305x_mii_write(struct rt305x_esw *esw, u32 phy_addr,
 	}
 
 	write_data &= 0xffff;
+#ifdef CONFIG_SOC_RT6855
+	esw_w32(esw, write_data | (phy_register << 16) | (phy_addr << 24) | (1 << 30),
+		RT305X_ESW_REG_PCR0);
+	esw_w32(esw, write_data | (phy_register << 16) | (phy_addr << 24) | (3 << 30),
+		RT305X_ESW_REG_PCR0);
+#else
 	esw_w32(esw, (write_data << RT305X_ESW_PCR0_WT_NWAY_DATA_S) |
 		      (phy_register << RT305X_ESW_PCR0_CPU_PHY_REG_S) |
 		      (phy_addr) | RT305X_ESW_PCR0_WT_PHY_CMD,
 		RT305X_ESW_REG_PCR0);
+#endif
 
 	t_start = jiffies;
 	while (1) {
-		if (esw_r32(esw, RT305X_ESW_REG_PCR1) &
-			    RT305X_ESW_PCR1_WT_DONE)
+#ifdef CONFIG_SOC_RT6855
+		if (!(esw_r32(esw, RT305X_ESW_REG_PCR0) &
+		      RT305X_ESW_PCR0_WT_DONE))
+#else
+		if (!(esw_r32(esw, RT305X_ESW_REG_PCR1) &
+		      RT305X_ESW_PCR1_WT_DONE))
+#endif
 			break;
 
 		if (time_after(jiffies, t_start + RT305X_ESW_PHY_TIMEOUT)) {

@@ -79,6 +79,8 @@ struct rtl8366_smi {
 	rtl8367b_chip_t		rtl8367b_chip;
 	struct mii_bus		*ext_mbus;
 	struct rtl8366_vlan_mc *emu_vlanmc;
+	bool			skip_reset_init;
+	bool			vendor_exact_init;
 };
 
 struct rtl8366_vlan_mc {

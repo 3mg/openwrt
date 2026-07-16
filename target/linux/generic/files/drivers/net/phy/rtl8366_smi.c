@@ -1056,6 +1056,9 @@ int rtl8366_sw_reset_switch(struct switch_dev *dev)
 	struct rtl8366_smi *smi = sw_to_rtl8366_smi(dev);
 	int err;
 
+	if (smi->skip_reset_init)
+		return -EPERM;
+
 	err = rtl8366_reset(smi);
 	if (err)
 		return err;
@@ -1364,8 +1367,7 @@ static int __rtl8366_smi_init(struct rtl8366_smi *smi, const char *name)
 {
 	spin_lock_init(&smi->lock);
 
-	/* start the switch */
-	if (smi->hw_reset) {
+	if (smi->hw_reset && !smi->skip_reset_init) {
 		smi->hw_reset(smi, false);
 		msleep(RTL8366_SMI_HW_START_DELAY);
 	}
@@ -1375,7 +1377,7 @@ static int __rtl8366_smi_init(struct rtl8366_smi *smi, const char *name)
 
 static void __rtl8366_smi_cleanup(struct rtl8366_smi *smi)
 {
-	if (smi->hw_reset)
+	if (smi->hw_reset && !smi->skip_reset_init)
 		smi->hw_reset(smi, true);
 }
 
@@ -1388,49 +1390,42 @@ int rtl8366_smi_init(struct rtl8366_smi *smi)
 
 	err = __rtl8366_smi_init(smi, dev_name(smi->parent));
 	if (err)
-		goto err_out;
+		return err;
 
 	if (smi->ext_mbus)
 		dev_info(smi->parent, "using MDIO bus '%s'\n", smi->ext_mbus->name);
 
 	err = smi->ops->detect(smi);
-	if (err) {
-		dev_err(smi->parent, "chip detection failed, err=%d\n", err);
-		goto err_free_sck;
-	}
-
-	err = rtl8366_reset(smi);
 	if (err)
-		goto err_free_sck;
+		goto err_cleanup;
+
+	if (!smi->skip_reset_init) {
+		err = rtl8366_reset(smi);
+		if (err)
+			goto err_cleanup;
+	}
 
 	err = smi->ops->setup(smi);
-	if (err) {
-		dev_err(smi->parent, "chip setup failed, err=%d\n", err);
-		goto err_free_sck;
-	}
+	if (err)
+		goto err_cleanup;
 
 	err = rtl8366_init_vlan(smi);
-	if (err) {
-		dev_err(smi->parent, "VLAN initialization failed, err=%d\n",
-			err);
-		goto err_free_sck;
-	}
+	if (err)
+		goto err_cleanup;
 
 	err = rtl8366_smi_enable_all_ports(smi, 1);
 	if (err)
-		goto err_free_sck;
+		goto err_cleanup;
 
 	err = rtl8366_smi_mii_init(smi);
 	if (err)
-		goto err_free_sck;
+		goto err_cleanup;
 
 	rtl8366_debugfs_init(smi);
-
 	return 0;
 
- err_free_sck:
+err_cleanup:
 	__rtl8366_smi_cleanup(smi);
- err_out:
 	return err;
 }
 EXPORT_SYMBOL_GPL(rtl8366_smi_init);
