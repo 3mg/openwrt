@@ -14,10 +14,8 @@ description: |
   modified or extended by device vendors. This defines a few optional
   properties which can be used to describe such modifications.
 
-# partition.txt defines common properties, but has not yet been
-# converted to YAML
-#allOf:
-#  - $ref: ../partition.yaml#
+allOf:
+  - $ref: partition.yaml#
 
 properties:
   compatible:
@@ -34,12 +32,12 @@ properties:
   openwrt,ih-magic:
     description: U-Boot Image Header magic number.
     $ref: /schemas/types.yaml#/definitions/uint32
-    default: 0x27051956 # IH_MAGIC
+    default: 0x27051956  # IH_MAGIC
 
   openwrt,ih-type:
     description: U-Boot Image type
     $ref: /schemas/types.yaml#/definitions/uint32
-    default: 2 # IH_TYPE_KERNEL
+    default: 2  # IH_TYPE_KERNEL
 
   openwrt,offset:
     description:
@@ -58,8 +56,7 @@ required:
   - compatible
   - reg
 
-#unevaluatedProperties: false
-additionalProperties: false
+unevaluatedProperties: false
 
 examples:
   - |
