@@ -197,6 +197,8 @@
 #define   RTL8367B_CHIP_RESET_SW		BIT(1) /*GOOD*/
 #define   RTL8367B_CHIP_RESET_HW		BIT(0) /*GOOD*/
 
+#define RTL8367B_LED_CONFIG_REG			0x1b03
+
 #define RTL8367B_PORT_STATUS_REG(_p)		(0x1352 + (_p)) /*GOOD*/
 #define   RTL8367B_PORT_STATUS_EN_1000_SPI	BIT(11) /*GOOD*/
 #define   RTL8367B_PORT_STATUS_EN_100_SPI	BIT(10)/*GOOD*/
@@ -452,6 +454,67 @@ static int rtl8367b_write_initvals(struct rtl8366_smi *smi,
 	return 0;
 }
 
+#define RTL8367RB_REV_1_INITVAL_INDEX	141
+
+/*
+ * The RTL8367RB RLVID 1 vendor table differs from rtl8367b_initvals[] in
+ * exactly one entry.  Keep the shared table intact for the other chips and
+ * replace that entry in place to preserve the ordered register sequence.
+ */
+static int rtl8367rb_write_rev_1_initvals(struct rtl8366_smi *smi)
+{
+	static const struct rtl8367b_initval rev_1_initval = {
+		.reg = 0x13e0,
+		.val = 0x0010,
+	};
+	const struct rtl8367b_initval *initval;
+	int remaining;
+	int err;
+
+	BUILD_BUG_ON(RTL8367RB_REV_1_INITVAL_INDEX >=
+		     ARRAY_SIZE(rtl8367b_initvals));
+
+	initval = &rtl8367b_initvals[RTL8367RB_REV_1_INITVAL_INDEX];
+	if (initval->reg != 0x13eb || initval->val != 0x11bb) {
+		dev_err(smi->parent, "invalid RTL8367RB init table split\n");
+		return -EINVAL;
+	}
+
+	err = rtl8367b_write_initvals(smi, rtl8367b_initvals,
+				      RTL8367RB_REV_1_INITVAL_INDEX);
+	if (err)
+		return err;
+
+	err = rtl8367b_write_initvals(smi, &rev_1_initval, 1);
+	if (err)
+		return err;
+
+	remaining = ARRAY_SIZE(rtl8367b_initvals) -
+		RTL8367RB_REV_1_INITVAL_INDEX - 1;
+
+	return rtl8367b_write_initvals(smi, initval + 1, remaining);
+}
+
+static int rtl8367rb_init_post(struct rtl8366_smi *smi)
+{
+	int err;
+
+	/* Post-table settings from the RTL8367RB RLVID 1 initialization path. */
+	REG_WR(smi, RTL8367B_CHIP_DEBUG0_REG, 0x0778);
+	REG_WR(smi, RTL8367B_CHIP_DEBUG1_REG, 0x7777);
+	REG_WR(smi, RTL8367B_CHIP_DEBUG2_REG, 0x01fe);
+	REG_RMW(smi, RTL8367B_EXT_RGMXF_REG(1),
+		RTL8367B_EXT_RGMXF_RXDELAY_MASK |
+		(RTL8367B_EXT_RGMXF_TXDELAY_MASK <<
+		 RTL8367B_EXT_RGMXF_TXDELAY_SHIFT),
+		0x000a);
+
+	/* Select link/activity indication for the three parallel LED groups. */
+	REG_WR(smi, RTL8367B_LED_CONFIG_REG, 0x0222);
+
+	return 0;
+}
+
 static int rtl8367b_read_phy_reg(struct rtl8366_smi *smi,
 				u32 phy_addr, u32 phy_reg, u32 *val)
 {
@@ -551,9 +614,15 @@ static int rtl8367b_init_regs(struct rtl8366_smi *smi)
 {
 	const struct rtl8367b_initval *initvals;
 	int count;
+	int err;
 
 	switch (smi->rtl8367b_chip) {
 	case RTL8367B_CHIP_RTL8367RB:
+		err = rtl8367rb_write_rev_1_initvals(smi);
+		if (err)
+			return err;
+
+		return rtl8367rb_init_post(smi);
 	case RTL8367B_CHIP_RTL8367R_VB:
 		initvals = rtl8367b_initvals;
 		count = ARRAY_SIZE(rtl8367b_initvals);
@@ -1516,7 +1585,8 @@ static int rtl8367b_detect(struct rtl8366_smi *smi)
 		return -ENODEV;
 	}
 
-	dev_info(smi->parent, "RTL%s chip found (num:%04x ver:%04x)\n", chip_name, chip_num, chip_ver);
+	dev_info(smi->parent, "RTL%s chip found (num:%04x ver:%04x)\n",
+		 chip_name, chip_num, chip_ver);
 
 	return 0;
 }
@@ -1625,4 +1695,3 @@ MODULE_DESCRIPTION("Realtek RTL8367B ethernet switch driver");
 MODULE_AUTHOR("Gabor Juhos <juhosg@openwrt.org>");
 MODULE_LICENSE("GPL v2");
 MODULE_ALIAS("platform:" RTL8367B_DRIVER_NAME);
-
