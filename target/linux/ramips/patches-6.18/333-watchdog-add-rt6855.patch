@@ -1,0 +1,244 @@
+From 3114f10b529def89938a4ef82c4eaf6666bd34b9 Mon Sep 17 00:00:00 2001
+From: Nickolay Savchenko <n.savchenko@axioma.lv>
+Date: Thu, 16 Jul 2026 03:35:29 +0300
+Subject: [PATCH 5/6] watchdog: add Ralink RT6855 watchdog support
+
+Add the hardware watchdog timer used by RT6855A and RT6856 SoCs.
+
+Signed-off-by: Nickolay Savchenko <n.savchenko@axioma.lv>
+---
+ drivers/watchdog/Kconfig      |  10 ++
+ drivers/watchdog/Makefile     |   1 +
+ drivers/watchdog/rt6855_wdt.c | 187 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 198 insertions(+)
+ create mode 100644 drivers/watchdog/rt6855_wdt.c
+
+diff --git a/drivers/watchdog/Kconfig b/drivers/watchdog/Kconfig
+index 05008d9..64899b9 100644
+--- a/drivers/watchdog/Kconfig
++++ b/drivers/watchdog/Kconfig
+@@ -1999,6 +1999,16 @@ config GXP_WATCHDOG
+ 	  To compile this driver as a module, choose M here.
+ 	  The module will be called gxp-wdt.
+ 
++config RT6855_WDT
++	tristate "Ralink RT6855 SoC watchdog"
++	select WATCHDOG_CORE
++	depends on RALINK
++	help
++	  Select this option to enable the hardware watchdog timer found in
++	  Ralink RT6855A and RT6856 system-on-chip devices. The watchdog uses
++	  the SoC timer block and can reset the system if userspace stops
++	  sending keepalive requests.
++
+ config MT7621_WDT
+ 	tristate "Mediatek SoC watchdog"
+ 	select WATCHDOG_CORE
+diff --git a/drivers/watchdog/Makefile b/drivers/watchdog/Makefile
+index b680e4d..eb75137 100644
+--- a/drivers/watchdog/Makefile
++++ b/drivers/watchdog/Makefile
+@@ -180,6 +180,7 @@ octeon-wdt-y := octeon-wdt-main.o octeon-wdt-nmi.o
+ obj-$(CONFIG_LANTIQ_WDT) += lantiq_wdt.o
+ obj-$(CONFIG_LOONGSON1_WDT) += loongson1_wdt.o
+ obj-$(CONFIG_RALINK_WDT) += rt2880_wdt.o
++obj-$(CONFIG_RT6855_WDT) += rt6855_wdt.o
+ obj-$(CONFIG_IMGPDC_WDT) += imgpdc_wdt.o
+ obj-$(CONFIG_MT7621_WDT) += mt7621_wdt.o
+ obj-$(CONFIG_PIC32_WDT) += pic32-wdt.o
+diff --git a/drivers/watchdog/rt6855_wdt.c b/drivers/watchdog/rt6855_wdt.c
+new file mode 100644
+index 0000000..679a523
+--- /dev/null
++++ b/drivers/watchdog/rt6855_wdt.c
+@@ -0,0 +1,187 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Ralink RT6855 built-in hardware watchdog timer
++ *
++ * Copyright (C) 2014 John Crispin <john at phrozen.org>
++ *
++ * This driver was based on: drivers/watchdog/rt6855_wdt.c
++ */
++
++#include <linux/clk.h>
++#include <linux/reset.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/watchdog.h>
++#include <linux/moduleparam.h>
++#include <linux/platform_device.h>
++#include <linux/mod_devicetable.h>
++
++#include <asm/mach-ralink/ralink_regs.h>
++
++#define TIMER_REG_TMRSTAT		0x38
++#define TIMER_REG_TMR1LOAD		0x2C
++#define TIMER_REG_TMR1CTL		0x00
++
++#define TMR1CTL_ENABLE			(BIT(5) | BIT(25))
++#define TMR1CTL_RESTART			BIT(0)
++
++static void __iomem *rt6855_wdt_base;
++static struct reset_control *rt6855_wdt_reset;
++
++static bool nowayout = WATCHDOG_NOWAYOUT;
++module_param(nowayout, bool, 0);
++MODULE_PARM_DESC(nowayout,
++		 "Watchdog cannot be stopped once started (default="
++		 __MODULE_STRING(WATCHDOG_NOWAYOUT) ")");
++
++static inline void rt_wdt_w32(unsigned int reg, u32 val)
++{
++	iowrite32(val, rt6855_wdt_base + reg);
++}
++
++static inline u32 rt_wdt_r32(unsigned int reg)
++{
++	return ioread32(rt6855_wdt_base + reg);
++}
++
++static int rt6855_wdt_ping(struct watchdog_device *w)
++{
++	rt_wdt_w32(TIMER_REG_TMRSTAT, TMR1CTL_RESTART);
++
++	return 0;
++}
++
++static int rt6855_wdt_set_timeout(struct watchdog_device *w, unsigned int t)
++{
++	u64 load = (u64)t * 116500000ULL;
++
++	if (load > U32_MAX)
++		return -EINVAL;
++
++	/*
++	 * The timer input is 233 MHz divided by two. Keep the multiply in
++	 * 64 bits: the old u32 expression shortened 30 seconds to about 11.
++	 */
++	w->timeout = t;
++	rt_wdt_w32(TIMER_REG_TMR1LOAD, (u32)load);
++	rt6855_wdt_ping(w);
++
++	return 0;
++}
++
++static int rt6855_wdt_start(struct watchdog_device *w)
++{
++	u32 t;
++
++	rt6855_wdt_set_timeout(w, w->timeout);
++
++	t = rt_wdt_r32(TIMER_REG_TMR1CTL);
++	t |= TMR1CTL_ENABLE;
++	rt_wdt_w32(TIMER_REG_TMR1CTL, t);
++
++	return 0;
++}
++
++static int rt6855_wdt_stop(struct watchdog_device *w)
++{
++	u32 t;
++
++	rt6855_wdt_ping(w);
++
++	t = rt_wdt_r32(TIMER_REG_TMR1CTL);
++	t &= ~TMR1CTL_ENABLE;
++	rt_wdt_w32(TIMER_REG_TMR1CTL, t);
++
++	return 0;
++}
++
++static int rt6855_wdt_bootcause(void)
++{
++	return 0;
++}
++
++static int rt6855_wdt_is_running(struct watchdog_device *w)
++{
++	return !!(rt_wdt_r32(TIMER_REG_TMR1CTL) & TMR1CTL_ENABLE);
++}
++
++static const struct watchdog_info rt6855_wdt_info = {
++	.identity = "Ralink Watchdog",
++	.options = WDIOF_SETTIMEOUT | WDIOF_KEEPALIVEPING | WDIOF_MAGICCLOSE,
++};
++
++static const struct watchdog_ops rt6855_wdt_ops = {
++	.owner = THIS_MODULE,
++	.start = rt6855_wdt_start,
++	.stop = rt6855_wdt_stop,
++	.ping = rt6855_wdt_ping,
++	.set_timeout = rt6855_wdt_set_timeout,
++};
++
++static struct watchdog_device rt6855_wdt_dev = {
++	.info = &rt6855_wdt_info,
++	.ops = &rt6855_wdt_ops,
++	.min_timeout = 1,
++	.max_timeout = U32_MAX / 116500000U,
++};
++
++static int rt6855_wdt_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++
++	rt6855_wdt_base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(rt6855_wdt_base))
++		return PTR_ERR(rt6855_wdt_base);
++
++	rt6855_wdt_reset = devm_reset_control_get_exclusive(dev, NULL);
++	if (!IS_ERR(rt6855_wdt_reset))
++		reset_control_deassert(rt6855_wdt_reset);
++
++	rt6855_wdt_dev.bootstatus = rt6855_wdt_bootcause();
++
++	watchdog_init_timeout(&rt6855_wdt_dev, rt6855_wdt_dev.max_timeout,
++			      dev);
++	watchdog_set_nowayout(&rt6855_wdt_dev, nowayout);
++	if (rt6855_wdt_is_running(&rt6855_wdt_dev)) {
++		/*
++		 * Make sure to apply timeout from watchdog core, taking
++		 * the prescaler of this driver here into account (the
++		 * boot loader might be using a different prescaler).
++		 *
++		 * To avoid spurious resets because of different scaling,
++		 * we first disable the watchdog, set the new prescaler
++		 * and timeout, and then re-enable the watchdog.
++		 */
++		rt6855_wdt_stop(&rt6855_wdt_dev);
++		rt6855_wdt_start(&rt6855_wdt_dev);
++		set_bit(WDOG_HW_RUNNING, &rt6855_wdt_dev.status);
++	}
++
++	return devm_watchdog_register_device(dev, &rt6855_wdt_dev);
++}
++
++static void rt6855_wdt_shutdown(struct platform_device *pdev)
++{
++	rt6855_wdt_stop(&rt6855_wdt_dev);
++}
++
++static const struct of_device_id rt6855_wdt_match[] = {
++	{ .compatible = "ralink,rt6855-wdt" },
++	{},
++};
++MODULE_DEVICE_TABLE(of, rt6855_wdt_match);
++
++static struct platform_driver rt6855_wdt_driver = {
++	.probe		= rt6855_wdt_probe,
++	.shutdown	= rt6855_wdt_shutdown,
++	.driver		= {
++		.name		= KBUILD_MODNAME,
++		.of_match_table	= rt6855_wdt_match,
++	},
++};
++
++module_platform_driver(rt6855_wdt_driver);
++
++MODULE_DESCRIPTION("Ralink RT6855 hardware watchdog driver");
++MODULE_AUTHOR("John Crispin <john at phrozen.org>");
++MODULE_LICENSE("GPL v2");
+-- 
+2.43.0
+
