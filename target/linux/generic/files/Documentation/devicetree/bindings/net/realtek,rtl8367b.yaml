@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+%YAML 1.2
+---
+$id: http://devicetree.org/schemas/net/realtek,rtl8367b.yaml#
+$schema: http://devicetree.org/meta-schemas/core.yaml#
+
+title: Realtek RTL8367B family Ethernet switches
+
+maintainers:
+  - Nickolay Savchenko <n.savchenko@axioma.lv>
+
+properties:
+  compatible:
+    const: realtek,rtl8367b
+
+  mii-bus:
+    $ref: /schemas/types.yaml#/definitions/phandle
+    description: MDIO bus used to access the switch registers.
+
+  phy-id:
+    $ref: /schemas/types.yaml#/definitions/uint32
+    maximum: 31
+    description: MDIO address used to access the switch registers.
+
+  sda-gpios:
+    maxItems: 1
+    description: GPIO used for the proprietary SMI data signal.
+
+  sck-gpios:
+    maxItems: 1
+    description: GPIO used for the proprietary SMI clock signal.
+
+  realtek,extif:
+    $ref: /schemas/types.yaml#/definitions/uint32-array
+    minItems: 10
+    maxItems: 10
+    description:
+      External interface configuration. The values select the CPU port,
+      transmit and receive delays, interface mode, forced mode, pause,
+      link, duplex and speed settings, in that order.
+
+  realtek,led-link-activity:
+    type: boolean
+    description:
+      Configure all three parallel LED groups to indicate link and activity
+      for the switch ports. This is disabled unless explicitly requested by
+      the board.
+
+required:
+  - compatible
+  - realtek,extif
+
+oneOf:
+  - required:
+      - mii-bus
+  - required:
+      - sda-gpios
+      - sck-gpios
+
+additionalProperties: false
+
+examples:
+  - |
+    switch {
+        compatible = "realtek,rtl8367b";
+        sda-gpios = <&gpio0 1 0>;
+        sck-gpios = <&gpio0 2 0>;
+        realtek,extif = <6 1 2 1 1 1 1 1 1 2>;
+        realtek,led-link-activity;
+    };
+
+...
