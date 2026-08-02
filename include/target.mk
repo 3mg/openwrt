@@ -328,7 +328,9 @@ ifeq ($(DUMP),1)
       FEATURES += virtio
     endif
     ifneq ($(CONFIG_CPU_MIPS32_R2),)
-      FEATURES += mips16
+      ifneq ($(DISABLE_MIPS16),y)
+        FEATURES += mips16
+      endif
     endif
     ifneq ($(CONFIG_CPU_V6),)
       FEATURES += arm_v6
