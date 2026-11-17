@@ -5,6 +5,7 @@ define Device/zyxel_keenetic-giga-ii
   IMAGE_SIZE := 14976k
   DEVICE_VENDOR := Zyxel
   DEVICE_MODEL := Keenetic Giga II
+  KERNEL_ENTRY = $$(shell LC_ALL=C readelf -h $(KDIR)/linux-$(LINUX_VERSION)/vmlinux 2>/dev/null | awk '/Entry point address:/ {print $$$$NF}')
   IMAGES += factory.bin
   IMAGE/factory.bin := $$(sysupgrade_bin) | pad-to $$$$(BLOCKSIZE) | \
 	check-size | \
