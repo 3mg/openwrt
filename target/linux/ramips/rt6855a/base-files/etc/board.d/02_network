@@ -10,7 +10,7 @@ zyxel,keenetic-giga-ii)
 	# RTL8367 ports are numbered in reverse order on the enclosure:
 	# switch port 4 is Internet, while ports 3 through 0 are LAN1-LAN4.
 	ucidef_add_switch "switch0" \
-		"4:wan" "3:lan" "2:lan" "1:lan" "0:lan" "6@eth0"
+		"3:lan" "2:lan" "1:lan" "0:lan" "4:wan" "6@eth0"
 	;;
 esac
 
